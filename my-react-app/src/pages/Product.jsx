@@ -8,7 +8,7 @@ export default function Product() {
     const { productId: rawProductId } = useParams();
     const productId = rawProductId.startsWith(":") ? rawProductId.slice(1) : rawProductId;
 
-    const { products, currency } = useContext(ShopContext);
+    const { products, currency,cartItem,addToCart } = useContext(ShopContext);
     const [productData, setProductData] = useState(null);
     const [image, setImage] = useState("");
     const [size,setSize] = useState("");
@@ -85,6 +85,7 @@ export default function Product() {
                         </div>
                         <button
                         className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700 rounded-lg transition-all"
+                        onClick = {()=>addToCart(productData._id,size)}
                         >
                         ADD TO CART
                         </button>
