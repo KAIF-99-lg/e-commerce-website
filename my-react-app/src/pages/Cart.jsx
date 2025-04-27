@@ -3,6 +3,7 @@ import { ShopContext } from "../context/ShopContextProvider"
 import Title from "../components/Title"
 import { assets } from "../assets/assets"
 import CartTotal from "../components/CartTotal"
+import {Link} from "react-router-dom"
 
 export default function Cart(){
     const {products,currency,cartItem,updateCount} = useContext(ShopContext)
@@ -62,6 +63,9 @@ export default function Cart(){
             <div className='flex justify-end my-20'>
                 <div className='w-full sm:w-[459px]'>
                     <CartTotal/>
+                    <div className="w-full text-end">
+                        <Link to="/placeorder"><button className="bg-black text-white text-sm my-8 px-8 py-3 cursor-pointer">PROCEED TO CHECKOUT</button></Link>
+                    </div>
                 </div>
             </div>
         </div>
