@@ -55,7 +55,16 @@ const registerUser = async (req,res)=>{
 }
 
 const adminLogin = async (req,res)=>{
-
+    try {
+        const {email,password} = req.body;
+        if(email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+            const token = jwt.sign(email+password, process.env.JWT_SECRET);
+            return res.json({message: "Admin logged in successfully", token});
+        }
+        res.status(401).json({message: "Invalid credentials"});
+    } catch (error) {
+        res.status(500).json({message: "Internal server error"});
+    }
 }
 
 export { loginUser, registerUser, adminLogin };
