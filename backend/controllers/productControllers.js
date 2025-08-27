@@ -34,10 +34,10 @@ const addProduct  = async (req, res) => {
 
         await product.save();
 
-        res.json({ message: 'Product added successfully', product });
+        res.status(200).json({ success: true, message: 'Product added successfully', product });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 }
 
