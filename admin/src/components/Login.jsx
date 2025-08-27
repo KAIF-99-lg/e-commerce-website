@@ -1,14 +1,31 @@
-import React, { useState } from 'react'
+import React, { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { backendUrl } from "../App.jsx";
 
-const Login = () => {
+
+const Login = ({ setToken }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log(email,password)
-    // handle login logic here
+    
+
+  const handleSubmit = async (e) => {
+    try {
+      e.preventDefault();
+      const response = await axios.post(backendUrl+'/api/user/adminLogin',{email,password});
+      if(response.data.success === true || response.data.success === "true"){
+        toast.success(response.data.message);
+        localStorage.setItem("token", response.data.token);
+        setToken(response.data.token);
+      }else{
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    }
   };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <form
@@ -17,7 +34,10 @@ const Login = () => {
       >
         <h2 className="text-2xl font-bold mb-6 text-gray-900">Admin Panel</h2>
         <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-2" htmlFor="email">
+          <label
+            className="block text-gray-700 font-medium mb-2"
+            htmlFor="email"
+          >
             Email Address
           </label>
           <input
@@ -31,7 +51,10 @@ const Login = () => {
           />
         </div>
         <div className="mb-6">
-          <label className="block text-gray-700 font-medium mb-2" htmlFor="password">
+          <label
+            className="block text-gray-700 font-medium mb-2"
+            htmlFor="password"
+          >
             Password
           </label>
           <input
@@ -53,7 +76,6 @@ const Login = () => {
       </form>
     </div>
   );
-}
+};
 
 export default Login;
-
