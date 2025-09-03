@@ -60,7 +60,7 @@ const List = ({ token }) => {
                     )}
                   </td>
                   <td className="p-3">{product.name}</td>
-                  <td className="p-3">₹{product.price}</td>
+                  <td className="p-3">${product.price}</td>
                   <td className="p-3">{product.category}</td>
                   <td className="p-3 text-center">
                     <button

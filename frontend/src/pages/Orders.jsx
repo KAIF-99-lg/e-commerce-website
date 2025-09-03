@@ -1,55 +1,112 @@
-import { useContext } from "react"
-import { ShopContext } from "../context/ShopContextProvider"
-import Title from "../components/Title"
+import React, { useEffect, useState, useContext } from "react";
+import { ShopContext } from "../context/ShopContextProvider.jsx";
 
-export default function Order() {
-  const { products, currency } = useContext(ShopContext)
+const Orders = () => {
+  const { backendUrl, token } = useContext(ShopContext);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(`${backendUrl}/api/order/userorders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ✅ required for authUser
+        },
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setOrders(data.orders);
+      } else {
+        setOrders([]);
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchOrders();
+    }
+  }, [token]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <p className="text-lg text-gray-600">Loading your orders...</p>
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <p className="text-lg text-gray-600">No orders found.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="border-t pt-16">
-      <div className="text-2xl">
-        <Title text1={"MY"} text2={"ORDERS"} />
-      </div>
-
-      <div>
-        {products.slice(1, 4).map((item, index) => (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <h2 className="text-2xl font-semibold mb-6">My Orders</h2>
+      <div className="space-y-4">
+        {orders.map((order) => (
           <div
-            key={index}
-            className="py-6 border-t border-b text-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
+            key={order._id}
+            className="border rounded-xl p-4 shadow-sm bg-white hover:shadow-md transition"
           >
-            {/* Left side: Product Info */}
-            <div className="flex items-start gap-6 text-sm flex-1">
-              <img className="w-16 sm:w-20" src={item.image[0]} alt="" />
-              <div>
-                <p className="sm:text-base font-medium">{item.name}</p>
-                <div className="flex items-center gap-3 mt-2 text-base text-gray-900">
-                  <p className="text-lg">{currency}{item.price}</p>
-                  <p>Quantity: 1</p>
-                  <p>Size: M</p>
-                </div>
-                <p>
-                  Date: <span className="text-gray-400">25, Jul, 2022</span>
-                </p>
-              </div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-gray-500">
+                Order ID: {order._id}
+              </span>
+              <span
+                className={`px-3 py-1 text-sm rounded-full ${
+                  order.status === "Order Placed"
+                    ? "bg-blue-100 text-blue-600"
+                    : order.status === "pending"
+                    ? "bg-yellow-100 text-yellow-600"
+                    : "bg-green-100 text-green-600"
+                }`}
+              >
+                {order.status}
+              </span>
             </div>
 
-            {/* Center: Ready to ship */}
-            <div className="flex-1 flex justify-center">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                <p className="text-sm md:text-base">Ready to ship</p>
-              </div>
+            <div className="mb-2">
+              <p className="text-gray-700 font-medium">
+                Amount: ₹{order.amount}
+              </p>
+              <p className="text-gray-600 text-sm">
+                Payment Method: {order.paymentMethod}
+              </p>
             </div>
 
-            {/* Right side: Track Order button */}
-            <div className="flex-1 flex justify-end">
-              <button className="border border-gray-400 px-4 py-2 text-sm font-medium rounded-md hover:bg-gray-100">
-                Track Order
-              </button>
+            <div>
+              <h4 className="font-medium mb-1">Items:</h4>
+              <ul className="list-disc pl-5 text-sm text-gray-700">
+                {order.items.map((item, idx) => (
+                  <li key={idx}>
+                    {item.name} × {item.quantity}
+                  </li>
+                ))}
+              </ul>
             </div>
+
+            <p className="text-xs text-gray-400 mt-3">
+              Ordered on: {new Date(order.date).toLocaleString()}
+            </p>
           </div>
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default Orders;

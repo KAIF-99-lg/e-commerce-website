@@ -9,9 +9,67 @@ const createToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET);
 };
 
-const loginUser = async (req,res)=>{
-   // abhi aap future me user login ke liye likhoge
-}
+const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Check if email and password are provided
+        if (!email || !password) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Email and password are required" 
+            });
+        }
+
+        // Validate email format
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Invalid email format" 
+            });
+        }
+
+        // Find user by email
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: "Invalid email or password" 
+            });
+        }
+
+        // Compare passwords
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ 
+                success: false, 
+                message: "Invalid email or password" 
+            });
+        }
+
+        // Create token
+        const token = createToken(user._id);
+        
+        // Return success response with token
+        res.json({ 
+            success: true, 
+            message: "User logged in successfully", 
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email
+            }
+        });
+        
+    } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Internal server error" 
+        });
+    }
+};
 
 const registerUser = async (req,res)=>{
     try {

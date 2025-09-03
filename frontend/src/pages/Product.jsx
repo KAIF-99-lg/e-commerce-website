@@ -19,7 +19,7 @@ export default function Product() {
             products.forEach((item) => {
                 if (item._id === productId) {
                     setProductData(item);
-                    setImage(item.image[0]);
+                    setImage(item.images[0]);
                 }
             });
         }
@@ -36,7 +36,7 @@ export default function Product() {
 
                 {/* Left Side: Thumbnail Images */}
                 <div className="flex flex-row lg:flex-col gap-3 w-full lg:w-[10%] overflow-x-auto lg:overflow-y-auto">
-                    {productData?.image?.map((item, index) => (
+                    {productData?.images?.map((item, index) => (
                         <img
                             onClick={() => setImage(item)}
                             src={item}

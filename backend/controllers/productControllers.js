@@ -1,79 +1,92 @@
-import {v2 as cloudinary} from 'cloudinary';
-import productModel from '../models/ProductModel.js';
+import productModel from "../models/productModel.js";
 
-const addProduct  = async (req, res) => {
-    try {
-        const {name,description,price,category,subcategory,sizes,bestseller} = req.body;
-        const images1 = req.files.image1 && req.files.image1[0];
-        const images2 = req.files.image2 && req.files.image2[0];
-        const images3 = req.files.image3 && req.files.image3[0];
-        const images4 = req.files.image4 && req.files.image4[0];
+// ✅ Add Product
+const addProduct = async (req, res) => {
+  try {
+    const { name, description, price, category, image, sizes, bestseller } = req.body;
 
-        const images = [images1, images2, images3, images4].filter((item) => item!==undefined);
-
-        const imageUrl = await Promise.all(images.map(async (image) => {
-            const url = await cloudinary.uploader.upload(image.path, { resource_type: 'image' });
-            return url.secure_url;
-        }));
-
-
-
-        const newProduct = {
-            name,
-            description,
-            price: Number(price),
-            category,
-            subcategory,
-            sizes: sizes.includes('[') ? JSON.parse(sizes) : sizes.split(','), 
-            bestseller: bestseller === "true" ? true : false,
-            images: imageUrl,
-            date: Date.now()
-        };
-
-        const product = new productModel(newProduct);
-
-        await product.save();
-
-        res.status(200).json({ success: true, message: 'Product added successfully', product });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    if (!name || !description || !price || !category || !image) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
     }
-}
 
+    const newProduct = new productModel({
+      name,
+      description,
+      price,
+      category,
+      image,
+      sizes: sizes || [],
+      bestseller: bestseller || false,
+    });
+
+    await newProduct.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Product added successfully",
+      product: newProduct,
+    });
+  } catch (error) {
+    console.error("❌ Error adding product:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+// ✅ Remove Product
+const removeProduct = async (req, res) => {
+  try {
+    const { productId } = req.body;
+
+    if (!productId) {
+      return res.status(400).json({ success: false, message: "Product ID missing" });
+    }
+
+    await productModel.findByIdAndDelete(productId);
+
+    res.status(200).json({ success: true, message: "Product removed successfully" });
+  } catch (error) {
+    console.error("❌ Error removing product:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+// ✅ List Products (FIXED)
 const listProducts = async (req, res) => {
-    try {
-        const products = await productModel.find({});
-        res.json(products);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-}
+  try {
+    const products = await productModel.find({});
+    res.status(200).json({
+      success: true,
+      products,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching products:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
 
-const removeProduct  = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await productModel.findByIdAndDelete(id);
-        res.json({ message: 'Product removed successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-}
-
+// ✅ Single Product
 const singleProduct = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const product = await productModel.findById(id);
-        if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
-        }
-        res.json(product);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-}
+  try {
+    const { productId } = req.params;
 
-export { addProduct, listProducts, removeProduct, singleProduct };
+    if (!productId) {
+      return res.status(400).json({ success: false, message: "Product ID missing" });
+    }
+
+    const product = await productModel.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    res.status(200).json({ success: true, product });
+  } catch (error) {
+    console.error("❌ Error fetching single product:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export { addProduct, removeProduct, listProducts, singleProduct };

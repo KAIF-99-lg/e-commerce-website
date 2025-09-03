@@ -1,20 +1,36 @@
+
 import React, { useContext } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets.js";
 import { ShopContext } from "../context/ShopContextProvider.jsx";
 
 export default function NavBar() {
-
-  const {setShowSearch,getCartCount} = useContext(ShopContext)
+  const { setShowSearch, getCartCount } = useContext(ShopContext);
   const [visible, setVisible] = React.useState(false);
+  const navigate = useNavigate();
 
   function handleClick() {
     setVisible((prev) => !prev);
   }
 
-  function handleChange(){
-    setShowSearch(prev=>!prev)
+  function handleChange() {
+    setShowSearch((prev) => !prev);
   }
+
+  function handleLogout() {
+    localStorage.removeItem("token");
+    navigate("/login");
+  }
+
+  // Check if user is logged in
+  const isLoggedIn = !!localStorage.getItem("token");
+
+  // Redirect to login if not logged in
+  React.useEffect(() => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    }
+  }, [isLoggedIn, navigate]);
 
   return (
     <div className="flex items-center justify-between py-5 px-4 sm:px-8 font-medium relative z-40">
@@ -45,14 +61,22 @@ export default function NavBar() {
       <div className="flex items-center gap-6">
         <img onClick={handleChange} src={assets.search_icon} className="w-5 cursor-pointer" alt="search" />
         <div className="group relative">
-          <img src={assets.profile_icon} className="w-5 cursor-pointer" alt="profile" />
-          <div className="group-hover:block hidden absolute dropdown-menu right-0 pt-4">
-            <div className="flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-600 rounded">
-              <p className="cursor-pointer hover:text-black">My Profile</p>
-              <p className="cursor-pointer hover:text-black">Orders</p>
-              <p className="cursor-pointer hover:text-black">Logout</p>
-            </div>
-          </div>
+          {isLoggedIn ? (
+            <>
+              <img src={assets.profile_icon} className="w-5 cursor-pointer" alt="profile" />
+              <div className="group-hover:block hidden absolute dropdown-menu right-0 pt-4">
+                <div className="flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-600 rounded">
+                  <p className="cursor-pointer hover:text-black">My Profile</p>
+                  <p onClick={() => navigate("/orders")} className="cursor-pointer hover:text-black">Orders</p>
+                  <p className="cursor-pointer hover:text-black" onClick={handleLogout}>Logout</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <Link to="/login">
+              <img src={assets.profile_icon} className="w-5 cursor-pointer" alt="profile" />
+            </Link>
+          )}
         </div>
         <Link to="/cart" className="relative">
           <img src={assets.cart_icon} className="w-5 min-w-5" alt="cart" />
@@ -88,6 +112,9 @@ export default function NavBar() {
           <NavLink onClick={handleClick} to="/" className={({ isActive }) =>`px-4 py-2 ${isActive ? 'bg-black text-white' : 'text-black'} sm:bg-transparent`}>
             Home
           </NavLink>
+          {isLoggedIn && (
+            <p className="cursor-pointer hover:text-black mt-4" onClick={handleLogout}>Logout</p>
+          )}
         </div>
       </div>
     </div>

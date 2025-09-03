@@ -5,12 +5,12 @@ import Title from "../components/Title.jsx";
 import ProductsItem from "../components/ProductsItem.jsx";
 
 export default function Collections() {
-    const { products,search,showSearch } = useContext(ShopContext);
+    const { products, search, showSearch } = useContext(ShopContext);
     const [showFilter, setShowFilter] = useState(false);
     const [filterProducts, setFilterProduct] = useState([]);
     const [category, setCategory] = useState([]);
     const [subCategory, setSubCategory] = useState([]);
-    const [sortType, setSortType] = useState('relavent');
+    const [sortType, setSortType] = useState("relevant");
 
     function handleClick() {
         setShowFilter(prev => !prev);
@@ -35,43 +35,45 @@ export default function Collections() {
     }
 
     function applyFilter() {
-        let productsCopy = products.slice();
+        let productsCopy = [...products];
 
-        if(showSearch && search){
-            productsCopy  = productsCopy.filter(item=>item.name.toLowerCase().includes(search.toLowerCase()))
+        if (showSearch && search) {
+            productsCopy = productsCopy.filter(item =>
+                item.name.toLowerCase().includes(search.toLowerCase())
+            );
         }
-    
+
         if (category.length > 0) {
             productsCopy = productsCopy.filter(item =>
                 category.includes(item.category)
             );
         }
-    
+
         if (subCategory.length > 0) {
             productsCopy = productsCopy.filter(item =>
-                subCategory.includes(item.subCategory)
+                subCategory.includes(item.subcategory) // ✅ schema me subcategory (lowercase "c")
             );
         }
-    
+
         setFilterProduct(productsCopy);
     }
-    
+
     function sort() {
-        let sortProduct = filterProducts.slice();
-    
+        let sortProduct = [...filterProducts];
+
         switch (sortType) {
-            case 'low-high':
+            case "low-high":
                 setFilterProduct(sortProduct.sort((a, b) => a.price - b.price));
                 break;
-            case 'high-low':
+            case "high-low":
                 setFilterProduct(sortProduct.sort((a, b) => b.price - a.price));
                 break;
             default:
-                applyFilter(); // fix: added ()
+                applyFilter();
                 break;
         }
     }
-    
+
     useEffect(() => {
         setFilterProduct(products);
         console.log("All products:", products);
@@ -79,7 +81,7 @@ export default function Collections() {
 
     useEffect(() => {
         applyFilter();
-    }, [category, subCategory,search,showSearch]);
+    }, [category, subCategory, search, showSearch]);
 
     useEffect(() => {
         sort();
@@ -101,21 +103,40 @@ export default function Collections() {
                     />
                 </p>
 
-                <div className={`mt-6 flex flex-col gap-6 ${showFilter ? '' : 'hidden'} sm:block`}>
+                <div
+                    className={`mt-6 flex flex-col gap-6 ${
+                        showFilter ? "" : "hidden"
+                    } sm:block`}
+                >
                     {/* CATEGORIES */}
                     <div className="border border-gray-300 p-4 rounded-md">
                         <p className="mb-3 text-sm font-medium">CATEGORIES</p>
                         <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
                             <label className="flex items-center gap-2">
-                                <input type="checkbox" value="Men" onChange={toggleCategory} className="w-4 h-4" />
+                                <input
+                                    type="checkbox"
+                                    value="Men"
+                                    onChange={toggleCategory}
+                                    className="w-4 h-4"
+                                />
                                 Men
                             </label>
                             <label className="flex items-center gap-2">
-                                <input type="checkbox" value="Women" onChange={toggleCategory} className="w-4 h-4" />
+                                <input
+                                    type="checkbox"
+                                    value="Women"
+                                    onChange={toggleCategory}
+                                    className="w-4 h-4"
+                                />
                                 Women
                             </label>
                             <label className="flex items-center gap-2">
-                                <input type="checkbox" value="Kids" onChange={toggleCategory} className="w-4 h-4" />
+                                <input
+                                    type="checkbox"
+                                    value="Kids"
+                                    onChange={toggleCategory}
+                                    className="w-4 h-4"
+                                />
                                 Kids
                             </label>
                         </div>
@@ -126,15 +147,30 @@ export default function Collections() {
                         <p className="mb-3 text-sm font-medium">TYPE</p>
                         <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
                             <label className="flex items-center gap-2">
-                                <input type="checkbox" value="Topwear" onChange={toggleSubCategory} className="w-4 h-4" />
+                                <input
+                                    type="checkbox"
+                                    value="Topwear"
+                                    onChange={toggleSubCategory}
+                                    className="w-4 h-4"
+                                />
                                 Topwear
                             </label>
                             <label className="flex items-center gap-2">
-                                <input type="checkbox" value="Bottomwear" onChange={toggleSubCategory} className="w-4 h-4" />
+                                <input
+                                    type="checkbox"
+                                    value="Bottomwear"
+                                    onChange={toggleSubCategory}
+                                    className="w-4 h-4"
+                                />
                                 Bottomwear
                             </label>
                             <label className="flex items-center gap-2">
-                                <input type="checkbox" value="Winterwear" onChange={toggleSubCategory} className="w-4 h-4" />
+                                <input
+                                    type="checkbox"
+                                    value="Winterwear"
+                                    onChange={toggleSubCategory}
+                                    className="w-4 h-4"
+                                />
                                 Winterwear
                             </label>
                         </div>
@@ -146,8 +182,11 @@ export default function Collections() {
             <div className="flex-1">
                 <div className="flex justify-between text-base sm:text-2xl mb-4">
                     <Title text1="ALL" text2="COLLECTIONS" />
-                    <select onChange={(e)=>{setSortType(e.target.value)}}className="border border-gray-300 text-sm px-2 cursor-pointer">
-                        <option value="Relevant">Sort By: Relevant</option>
+                    <select
+                        onChange={e => setSortType(e.target.value)}
+                        className="border border-gray-300 text-sm px-2 cursor-pointer"
+                    >
+                        <option value="relevant">Sort By: Relevant</option>
                         <option value="low-high">Sort By: Low to High</option>
                         <option value="high-low">Sort By: High to Low</option>
                     </select>
@@ -163,13 +202,14 @@ export default function Collections() {
                             <ProductsItem
                                 key={index}
                                 id={item._id}
-                                image={item.image}
+                                images={item.images}
                                 name={item.name}
                                 price={item.price}
                             />
                         ))
                     )}
                 </div>
+
             </div>
         </div>
     );
