@@ -12,8 +12,15 @@ const List = ({ token }) => {
         const response = await axios.get(backendUrl + "/api/product/list", {
           headers: { token },
         });
-        setProducts(response.data);
+
+        // Safely pick out the array from the response
+        const arr = Array.isArray(response.data)
+          ? response.data
+          : response.data.products || [];
+
+        setProducts(arr);
       } catch (error) {
+        console.error("Error fetching products:", error);
         setProducts([]);
       } finally {
         setLoading(false);
@@ -27,7 +34,7 @@ const List = ({ token }) => {
       await axios.delete(backendUrl + `/api/product/remove/${id}`, {
         headers: { token },
       });
-      setProducts(products.filter((p) => p._id !== id));
+      setProducts((prev) => prev.filter((p) => p._id !== id));
     } catch (error) {
       alert("Failed to delete product");
     }
@@ -52,32 +59,39 @@ const List = ({ token }) => {
               </tr>
             </thead>
             <tbody>
-              {products.map((product, idx) => (
-                <tr key={product._id} className="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition">
-                  <td className="p-3">
-                    {product.images && product.images[0] && (
-                      <img src={product.images[0]} alt={product.name} className="w-12 h-12 object-cover rounded-lg" />
-                    )}
-                  </td>
-                  <td className="p-3">{product.name}</td>
-                  <td className="p-3">${product.price}</td>
-                  <td className="p-3">{product.category}</td>
-                  <td className="p-3 text-center">
-                    <button
-                      onClick={() => handleDelete(product._id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition shadow"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {Array.isArray(products) &&
+                products.map((product) => (
+                  <tr
+                    key={product._id}
+                    className="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition"
+                  >
+                    <td className="p-3">
+                      {product.images && product.images[0] && (
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="w-12 h-12 object-cover rounded-lg"
+                        />
+                      )}
+                    </td>
+                    <td className="p-3">{product.name}</td>
+                    <td className="p-3">${product.price}</td>
+                    <td className="p-3">{product.category}</td>
+                    <td className="p-3 text-center">
+                      <button
+                        onClick={() => handleDelete(product._id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg transition shadow"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
       </div>
     </div>
-
   );
 };
 
