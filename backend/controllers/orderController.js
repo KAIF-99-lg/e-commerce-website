@@ -1,24 +1,55 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import productModel from "../models/productModel.js";
 
-// =====================
-// Normal Place Order (COD)
-// =====================
 const placeOrder = async (req, res) => {
   try {
     if (!req.userId) {
+      console.log("❌ No req.userId");
       return res.status(401).json({ success: false, message: "User not authorized" });
     }
 
     const { items, amount, address, paymentMethod } = req.body;
+    console.log("📥 Incoming Order Body:", req.body);
 
     if (!items || !amount || !address || !paymentMethod) {
+      console.log("❌ Missing fields");
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
+    // ✅ Enrich items with product name & first image
+    const enrichedItems = await Promise.all(
+      items.map(async (item, idx) => {
+        try {
+          const product = await productModel.findById(item.productId);
+          console.log(`✅ Product found for item[${idx}]:`, product?.name);
+
+          return {
+            productId: item.productId,
+            name: product?.name || "Unknown",
+            image:
+              Array.isArray(product?.images) && product.images.length > 0
+                ? product.images[0] // take first image from array
+                : "", // fallback
+            quantity: item.quantity,
+          };
+        } catch (err) {
+          console.error(`❌ Error fetching product for item[${idx}]:`, err);
+          return {
+            productId: item.productId,
+            name: "Unknown",
+            image: "",
+            quantity: item.quantity,
+          };
+        }
+      })
+    );
+
+    console.log("📝 Enriched Items:", enrichedItems);
+
     const newOrder = new orderModel({
-      userId: req.userId, // ✅ Token se aaya userId
-      items,
+      userId: req.userId,
+      items: enrichedItems,
       amount,
       address,
       paymentMethod,
@@ -27,9 +58,10 @@ const placeOrder = async (req, res) => {
     });
 
     await newOrder.save();
+    console.log("✅ Order saved:", newOrder._id);
 
-    // ✅ Order ke baad user ka cart clear kar dena
     await userModel.findByIdAndUpdate(req.userId, { cartData: {} });
+    console.log("🗑️ Cart cleared for user:", req.userId);
 
     return res.status(201).json({
       success: true,
