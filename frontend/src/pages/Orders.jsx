@@ -12,12 +12,11 @@ const Orders = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ required for authUser
+          Authorization: `Bearer ${token}`,
         },
       });
 
       const data = await res.json();
-
       if (data.success) {
         setOrders(data.orders);
       } else {
@@ -54,15 +53,16 @@ const Orders = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h2 className="text-2xl font-semibold mb-6">My Orders</h2>
-      <div className="space-y-4">
+    <div className="max-w-5xl mx-auto px-4 py-8">
+      <h2 className="text-3xl font-bold mb-6">My Orders</h2>
+      <div className="space-y-6">
         {orders.map((order) => (
           <div
             key={order._id}
-            className="border rounded-xl p-4 shadow-sm bg-white hover:shadow-md transition"
+            className="border rounded-2xl p-6 shadow-md bg-white hover:shadow-lg transition"
           >
-            <div className="flex justify-between items-center mb-2">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-4">
               <span className="text-sm text-gray-500">
                 Order ID: {order._id}
               </span>
@@ -79,27 +79,47 @@ const Orders = () => {
               </span>
             </div>
 
-            <div className="mb-2">
-              <p className="text-gray-700 font-medium">
+            {/* Amount + Payment */}
+            <div className="mb-4">
+              <p className="text-lg font-semibold text-gray-800">
                 Amount: ₹{order.amount}
               </p>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-500 text-sm">
                 Payment Method: {order.paymentMethod}
               </p>
             </div>
 
-            <div>
-              <h4 className="font-medium mb-1">Items:</h4>
-              <ul className="list-disc pl-5 text-sm text-gray-700">
-                {order.items.map((item, idx) => (
-                  <li key={idx}>
-                    {item.name} × {item.quantity}
-                  </li>
-                ))}
-              </ul>
+            {/* Items */}
+            <div className="space-y-4">
+              {order.items.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-4 border-b pb-3 last:border-b-0"
+                >
+                  {/* ✅ only render <img> if item.image exists */}
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-16 h-16 object-cover rounded-md border"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded-md text-xs text-gray-500 border">
+                      No Image
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p className="text-gray-800 font-medium">{item.name}</p>
+                    <p className="text-sm text-gray-500">
+                      Quantity: {item.quantity}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <p className="text-xs text-gray-400 mt-3">
+            {/* Date */}
+            <p className="text-xs text-gray-400 mt-4">
               Ordered on: {new Date(order.date).toLocaleString()}
             </p>
           </div>
