@@ -42,7 +42,7 @@ const Add = ({token}) => {
 
     try {
       const response = await axios.post(backendUrl + '/api/product/add', formData, { headers: { token } })
-      if (response.status === 200 && response.data.success) {
+      if (response.data.success) {
         toast.success('Product added successfully!')
         setName("")
         setDescription("")
@@ -151,6 +151,7 @@ const Add = ({token}) => {
             className="w-full px-3 py-2 sm:w-[120px] border"
             type="number"
             placeholder="$200"
+            required
           />
         </div>
       </div>
