@@ -1,22 +1,45 @@
 import productModel from "../models/productModel.js";
+import {v2 as cloudinary} from 'cloudinary';
 
 // ✅ Add Product
 const addProduct = async (req, res) => {
   try {
-    const { name, description, price, category, image, sizes, bestseller } = req.body;
+    const { name, description, price, category, subCategory, sizes, bestseller } = req.body;
+    
+    console.log('Received data:', { name, description, price, category, subCategory, sizes, bestseller });
+    console.log('Files:', req.files);
+    
+    // Check each field individually
+    if (!name) {
+      return res.status(400).json({ success: false, message: "Name is required" });
+    }
+    if (!description) {
+      return res.status(400).json({ success: false, message: "Description is required" });
+    }
+    if (!price) {
+      return res.status(400).json({ success: false, message: "Price is required" });
+    }
+    if (!category) {
+      return res.status(400).json({ success: false, message: "Category is required" });
+    }
 
-    if (!name || !description || !price || !category || !image) {
-      return res.status(400).json({ success: false, message: "Missing required fields" });
+    const images = [];
+    if (req.files) {
+      if (req.files.image1) images.push(`${process.env.BACKEND_URL || 'http://localhost:4000'}/uploads/${req.files.image1[0].filename}`);
+      if (req.files.image2) images.push(`${process.env.BACKEND_URL || 'http://localhost:4000'}/uploads/${req.files.image2[0].filename}`);
+      if (req.files.image3) images.push(`${process.env.BACKEND_URL || 'http://localhost:4000'}/uploads/${req.files.image3[0].filename}`);
+      if (req.files.image4) images.push(`${process.env.BACKEND_URL || 'http://localhost:4000'}/uploads/${req.files.image4[0].filename}`);
     }
 
     const newProduct = new productModel({
       name,
       description,
-      price,
+      price: Number(price),
       category,
-      image,
-      sizes: sizes || [],
-      bestseller: bestseller || false,
+      subcategory: subCategory,
+      images,
+      sizes: sizes ? JSON.parse(sizes) : [],
+      bestseller: bestseller === 'true',
     });
 
     await newProduct.save();
@@ -35,13 +58,17 @@ const addProduct = async (req, res) => {
 // ✅ Remove Product
 const removeProduct = async (req, res) => {
   try {
-    const { productId } = req.body;
+    const { id } = req.params;
 
-    if (!productId) {
+    if (!id) {
       return res.status(400).json({ success: false, message: "Product ID missing" });
     }
 
-    await productModel.findByIdAndDelete(productId);
+    const deletedProduct = await productModel.findByIdAndDelete(id);
+    
+    if (!deletedProduct) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
 
     res.status(200).json({ success: true, message: "Product removed successfully" });
   } catch (error) {

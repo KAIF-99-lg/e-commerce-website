@@ -3,6 +3,7 @@ import userModel from "../models/userModel.js";
 import productModel from "../models/productModel.js";
 import Razorpay from "razorpay";
 import crypto from "crypto";
+import { sendOrderConfirmationEmail } from "../services/emailService.js";
 
 const placeOrder = async (req, res) => {
   try {
@@ -62,6 +63,22 @@ const placeOrder = async (req, res) => {
     await newOrder.save();
     console.log("✅ Order saved:", newOrder._id);
 
+    // Send order confirmation email
+    const user = await userModel.findById(req.userId);
+    console.log("📧 User found for email:", user?.email);
+    if (user && user.email) {
+      console.log("📤 Sending email to:", user.email);
+      const emailSent = await sendOrderConfirmationEmail(user.email, {
+        orderId: newOrder._id,
+        items: enrichedItems,
+        amount,
+        address
+      });
+      console.log("📧 Email sent status:", emailSent);
+    } else {
+      console.log("❌ No user email found");
+    }
+
     await userModel.findByIdAndUpdate(req.userId, { cartData: {} });
     console.log("🗑️ Cart cleared for user:", req.userId);
 
@@ -113,10 +130,22 @@ const placeOrderRazorpay = async (req, res) => {
     }
 
     // Initialize Razorpay
+    console.log("🔑 Razorpay Key ID:", process.env.RAZORPAY_KEY_ID ? "Found" : "Missing");
+    console.log("🔐 Razorpay Secret:", process.env.RAZORPAY_KEY_SECRET ? "Found" : "Missing");
+    
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      return res.status(500).json({ 
+        success: false, 
+        message: "Razorpay credentials not configured properly" 
+      });
+    }
+    
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
+    
+    console.log("✅ Razorpay instance created successfully");
 
     // Create Razorpay order
     const options = {
@@ -125,7 +154,9 @@ const placeOrderRazorpay = async (req, res) => {
       receipt: `order_${Date.now()}`,
     };
 
+    console.log("💰 Creating Razorpay order with options:", options);
     const razorpayOrder = await razorpay.orders.create(options);
+    console.log("✅ Razorpay order created:", razorpayOrder.id);
 
     // Enrich items with product details
     const enrichedItems = await Promise.all(
@@ -173,6 +204,13 @@ const placeOrderRazorpay = async (req, res) => {
     });
   } catch (error) {
     console.error("Razorpay order error:", error);
+    if (error.statusCode === 401) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid Razorpay credentials. Please check your Key ID and Secret.",
+        error: "Authentication failed" 
+      });
+    }
     res.status(500).json({ success: false, message: "Error creating Razorpay order", error: error.message });
   }
 };
@@ -273,6 +311,22 @@ const verifyRazorpay = async (req, res) => {
 
     if (!updatedOrder) {
       return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Send order confirmation email
+    const user = await userModel.findById(updatedOrder.userId);
+    console.log("📧 User found for Razorpay email:", user?.email);
+    if (user && user.email) {
+      console.log("📤 Sending Razorpay confirmation email to:", user.email);
+      const emailSent = await sendOrderConfirmationEmail(user.email, {
+        orderId: updatedOrder._id,
+        items: updatedOrder.items,
+        amount: updatedOrder.amount,
+        address: updatedOrder.address
+      });
+      console.log("📧 Razorpay email sent status:", emailSent);
+    } else {
+      console.log("❌ No user email found for Razorpay order");
     }
 
     // Clear user cart
