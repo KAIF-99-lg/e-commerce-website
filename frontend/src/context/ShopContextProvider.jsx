@@ -243,11 +243,12 @@ export default function ShopContextProvider(props) {
   const getProductData = async () => {
     try {
       const response = await axios.get(backendUrl + "/api/product/list");
-      if (Array.isArray(response.data)) {
-        setProducts(response.data);
-      } else if (response.data.success && response.data.products) {
+      if (response.data.success && response.data.products) {
         setProducts(response.data.products);
+      } else if (Array.isArray(response.data)) {
+        setProducts(response.data);
       } else {
+        console.log('Response data:', response.data);
         toast.error("Invalid response format from backend");
       }
     } catch (error) {
